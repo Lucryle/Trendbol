@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "9zXcinDAlt4KZcD3ZiYexKQL6BJ5SwYF+8dGg5OUtgA=",
+  "Source": "TrendbolAPI",
+  "BasePath": "_content/TrendbolAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

@@ -1,4 +1,4 @@
-namespace Trendbol
+namespace TrendbolAPI.Models
 {
     public class Category
     {

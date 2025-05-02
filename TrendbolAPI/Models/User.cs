@@ -1,6 +1,6 @@
 using System;
 
-namespace Trendbol
+namespace TrendbolAPI.Models
 {
     public class User
     {
