@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TrendbolAPI.Data;
 using TrendbolAPI.Models;
+using TrendbolAPI.Models.DTOs;
+using TrendbolAPI.Services.Interfaces;
 
 namespace TrendbolAPI.Controllers
 {
@@ -9,89 +9,186 @@ namespace TrendbolAPI.Controllers
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
-        private readonly TrendbolContext _context;
+        private readonly IProductService _productService;
 
-        public ProductController(TrendbolContext context)
+        public ProductController(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
-        // GET: api/Product
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetAllProducts()
         {
-            return await _context.Products.Include(p => p.Category).Include(p => p.Seller).ToListAsync();
+            var products = await _productService.GetAllProductsAsync();
+            var productDtos = products.Select(p => new ProductResponseDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category?.Name,
+                CreatedAt = p.CreatedAt
+            });
+            return Ok(productDtos);
         }
 
-        // GET: api/Product/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ProductResponseDTO>> GetProductById(int id)
         {
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Seller)
-                .FirstOrDefaultAsync(p => p.ProductID == id);
-
+            var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
-                return NotFound();
+                return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
-            return product;
+            var productDto = new ProductResponseDTO
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category?.Name,
+                CreatedAt = product.CreatedAt
+            };
+            return Ok(productDto);
         }
 
-        // POST: api/Product
+        [HttpGet("category/{categoryId}")]
+        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetProductsByCategory(int categoryId)
+        {
+            var products = await _productService.GetProductsByCategoryAsync(categoryId);
+            var productDtos = products.Select(p => new ProductResponseDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category?.Name,
+                CreatedAt = p.CreatedAt
+            });
+            return Ok(productDtos);
+        }
+
         [HttpPost]
-        public async Task<ActionResult<Product>> AddProduct(Product product)
+        public async Task<ActionResult<ProductResponseDTO>> CreateProduct(CreateProductDTO createProductDto)
         {
-            // Kategori kontrolü
-            var categoryExists = await _context.Categories.AnyAsync(c => c.CategoryID == product.CategoryID);
-            if (!categoryExists)
-                return BadRequest("Invalid CategoryID: Category does not exist.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            // Satıcı kontrolü
-            var seller = await _context.Users.FindAsync(product.SellerID);
-            if (seller == null || seller.Role.ToLower() != "seller")
-                return BadRequest("Invalid SellerID: User does not exist or doesnt authorized to sell.");
+            var product = new Product
+            {
+                Name = createProductDto.Name,
+                Description = createProductDto.Description,
+                Price = createProductDto.Price,
+                StockQuantity = createProductDto.StockQuantity,
+                CategoryId = createProductDto.CategoryId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            var createdProduct = await _productService.CreateProductAsync(product);
+            if (createdProduct == null)
+                return BadRequest("Ürün oluşturulamadı.");
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductID }, product);
+            var productDto = new ProductResponseDTO
+            {
+                Id = createdProduct.Id,
+                Name = createdProduct.Name,
+                Description = createdProduct.Description,
+                Price = createdProduct.Price,
+                StockQuantity = createdProduct.StockQuantity,
+                CategoryId = createdProduct.CategoryId,
+                CategoryName = createdProduct.Category?.Name,
+                CreatedAt = createdProduct.CreatedAt
+            };
+
+            return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, productDto);
         }
 
-        // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, Product product)
+        public async Task<ActionResult<ProductResponseDTO>> UpdateProduct(int id, UpdateProductDTO updateProductDto)
         {
-            if (id != product.ProductID)
-                return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(product).State = EntityState.Modified;
+            var existingProduct = await _productService.GetProductByIdAsync(id);
+            if (existingProduct == null)
+                return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
-            try
+            // Sadece değişen alanları güncelle
+            if (updateProductDto.Name != null)
+                existingProduct.Name = updateProductDto.Name;
+            if (updateProductDto.Description != null)
+                existingProduct.Description = updateProductDto.Description;
+            if (updateProductDto.Price.HasValue)
+                existingProduct.Price = updateProductDto.Price.Value;
+            if (updateProductDto.StockQuantity.HasValue)
+                existingProduct.StockQuantity = updateProductDto.StockQuantity.Value;
+            if (updateProductDto.CategoryId.HasValue)
+                existingProduct.CategoryId = updateProductDto.CategoryId.Value;
+
+            var updatedProduct = await _productService.UpdateProductAsync(id, existingProduct);
+            if (updatedProduct == null)
+                return BadRequest("Ürün güncellenemedi.");
+
+            var productDto = new ProductResponseDTO
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Products.Any(e => e.ProductID == id))
-                    return NotFound();
-                else
-                    throw;
-            }
+                Id = updatedProduct.Id,
+                Name = updatedProduct.Name,
+                Description = updatedProduct.Description,
+                Price = updatedProduct.Price,
+                StockQuantity = updatedProduct.StockQuantity,
+                CategoryId = updatedProduct.CategoryId,
+                CategoryName = updatedProduct.Category?.Name,
+                CreatedAt = updatedProduct.CreatedAt
+            };
+
+            return Ok(productDto);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var result = await _productService.DeleteProductAsync(id);
+            if (!result)
+                return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
             return NoContent();
         }
 
-        // DELETE: api/Product/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> SearchProducts([FromQuery] string searchTerm)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-                return NotFound();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return BadRequest("Arama terimi boş olamaz.");
 
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            var products = await _productService.SearchProductsAsync(searchTerm);
+            var productDtos = products.Select(p => new ProductResponseDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category?.Name,
+                CreatedAt = p.CreatedAt
+            });
+            return Ok(productDtos);
+        }
+
+        [HttpPut("{id}/stock")]
+        public async Task<IActionResult> UpdateStock(int id, [FromBody] int quantity)
+        {
+            if (quantity < 0)
+                return BadRequest("Stok miktarı negatif olamaz.");
+
+            var result = await _productService.UpdateProductStockAsync(id, quantity);
+            if (!result)
+                return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
             return NoContent();
         }

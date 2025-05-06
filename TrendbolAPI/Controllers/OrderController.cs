@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TrendbolAPI.Data;
 using TrendbolAPI.Models;
+using TrendbolAPI.Models.DTOs;
+using TrendbolAPI.Services.Interfaces;
 
 namespace TrendbolAPI.Controllers
 {
@@ -9,81 +9,140 @@ namespace TrendbolAPI.Controllers
     [Route("api/[controller]")]
     public class OrderController : ControllerBase
     {
-        private readonly TrendbolContext _context;
+        private readonly IOrderService _orderService;
 
-        public OrderController(TrendbolContext context)
+        public OrderController(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
-        // GET: api/Order
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<OrderResponseDTO>>> GetAllOrders()
         {
-            return await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.Product)
-                .ToListAsync();
+            var orders = await _orderService.GetAllOrdersAsync();
+            var orderDtos = orders.Select(o => new OrderResponseDTO
+            {
+                Id = o.Id,
+                UserId = o.UserId,
+                UserName = $"{o.User.FirstName} {o.User.LastName}",
+                ProductId = o.ProductId,
+                ProductName = o.Product.Name,
+                Quantity = o.Quantity,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status,
+                CreatedAt = o.CreatedAt
+            });
+            return Ok(orderDtos);
         }
 
-        // GET: api/Order/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<OrderResponseDTO>> GetOrderById(int id)
         {
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.Product)
-                .FirstOrDefaultAsync(o => o.OrderID == id);
-
+            var order = await _orderService.GetOrderByIdAsync(id);
             if (order == null)
-                return NotFound();
+                return NotFound($"ID'si {id} olan sipariş bulunamadı.");
 
-            return order;
+            var orderDto = new OrderResponseDTO
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                UserName = $"{order.User.FirstName} {order.User.LastName}",
+                ProductId = order.ProductId,
+                ProductName = order.Product.Name,
+                Quantity = order.Quantity,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt
+            };
+            return Ok(orderDto);
         }
 
-        // POST: api/Order
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<OrderResponseDTO>>> GetUserOrders(int userId)
+        {
+            var orders = await _orderService.GetUserOrdersAsync(userId);
+            var orderDtos = orders.Select(o => new OrderResponseDTO
+            {
+                Id = o.Id,
+                UserId = o.UserId,
+                UserName = $"{o.User.FirstName} {o.User.LastName}",
+                ProductId = o.ProductId,
+                ProductName = o.Product.Name,
+                Quantity = o.Quantity,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status,
+                CreatedAt = o.CreatedAt
+            });
+            return Ok(orderDtos);
+        }
+
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(Order order)
+        public async Task<ActionResult<OrderResponseDTO>> CreateOrder(CreateOrderDTO createOrderDto)
         {
-            var product = await _context.Products.FindAsync(order.ProductID);
-            if (product == null || product.Stock < order.Quantity)
-                return BadRequest("Invalid product or insufficient stock.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            order.TotalPrice = product.Price * order.Quantity;
-            order.CreatedAt = DateTime.UtcNow;
+            var order = new Order
+            {
+                UserId = createOrderDto.UserId,
+                ProductId = createOrderDto.ProductId,
+                Quantity = createOrderDto.Quantity,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
 
-            product.Stock -= order.Quantity;
+            var createdOrder = await _orderService.CreateOrderAsync(order);
+            if (createdOrder == null)
+                return BadRequest("Sipariş oluşturulamadı.");
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            var orderDto = new OrderResponseDTO
+            {
+                Id = createdOrder.Id,
+                UserId = createdOrder.UserId,
+                UserName = $"{createdOrder.User.FirstName} {createdOrder.User.LastName}",
+                ProductId = createdOrder.ProductId,
+                ProductName = createdOrder.Product.Name,
+                Quantity = createdOrder.Quantity,
+                TotalAmount = createdOrder.TotalAmount,
+                Status = createdOrder.Status,
+                CreatedAt = createdOrder.CreatedAt
+            };
 
-            return CreatedAtAction(nameof(GetOrder), new { id = order.OrderID }, order);
+            return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, orderDto);
         }
 
-        // PUT: api/Order/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] string newStatus)
+        [HttpPut("{id}/status")]
+        public async Task<ActionResult<OrderResponseDTO>> UpdateOrderStatus(int id, UpdateOrderStatusDTO updateStatusDto)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
-                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            order.Status = newStatus;
-            await _context.SaveChangesAsync();
+            var updatedOrder = await _orderService.UpdateOrderStatusAsync(id, updateStatusDto.Status);
+            if (updatedOrder == null)
+                return NotFound($"ID'si {id} olan sipariş bulunamadı.");
 
-            return NoContent();
+            var orderDto = new OrderResponseDTO
+            {
+                Id = updatedOrder.Id,
+                UserId = updatedOrder.UserId,
+                UserName = $"{updatedOrder.User.FirstName} {updatedOrder.User.LastName}",
+                ProductId = updatedOrder.ProductId,
+                ProductName = updatedOrder.Product.Name,
+                Quantity = updatedOrder.Quantity,
+                TotalAmount = updatedOrder.TotalAmount,
+                Status = updatedOrder.Status,
+                CreatedAt = updatedOrder.CreatedAt
+            };
+
+            return Ok(orderDto);
         }
 
-        // DELETE: api/Order/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
-                return NotFound();
-
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
+            var result = await _orderService.DeleteOrderAsync(id);
+            if (!result)
+                return NotFound($"ID'si {id} olan sipariş bulunamadı.");
 
             return NoContent();
         }

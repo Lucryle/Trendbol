@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TrendbolAPI.Data;
 using TrendbolAPI.Models;
+using TrendbolAPI.Models.DTOs;
+using TrendbolAPI.Services.Interfaces;
 
 namespace TrendbolAPI.Controllers
 {
@@ -9,78 +9,132 @@ namespace TrendbolAPI.Controllers
     [Route("api/[controller]")]
     public class CategoryController : ControllerBase
     {
-        private readonly TrendbolContext _context;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(TrendbolContext context)
+        public CategoryController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
-        // GET: api/Category
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<CategoryResponseDTO>>> GetAllCategories()
         {
-            return await _context.Categories.ToListAsync();
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            var categoryDtos = categories.Select(c => new CategoryResponseDTO
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                CreatedAt = c.CreatedAt
+            });
+            return Ok(categoryDtos);
         }
 
-        // GET: api/Category/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
+        public async Task<ActionResult<CategoryResponseDTO>> GetCategoryById(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-
+            var category = await _categoryService.GetCategoryByIdAsync(id);
             if (category == null)
-                return NotFound();
+                return NotFound($"ID'si {id} olan kategori bulunamadı.");
 
-            return category;
+            var categoryDto = new CategoryResponseDTO
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+                CreatedAt = category.CreatedAt
+            };
+            return Ok(categoryDto);
         }
 
-        // POST: api/Category
         [HttpPost]
-        public async Task<ActionResult<Category>> AddCategory(Category category)
+        public async Task<ActionResult<CategoryResponseDTO>> CreateCategory(CreateCategoryDTO createCategoryDto)
         {
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return CreatedAtAction(nameof(GetCategory), new { id = category.CategoryID }, category);
+            var category = new Category
+            {
+                Name = createCategoryDto.Name,
+                Description = createCategoryDto.Description,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var createdCategory = await _categoryService.CreateCategoryAsync(category);
+            if (createdCategory == null)
+                return BadRequest("Kategori oluşturulamadı.");
+
+            var categoryDto = new CategoryResponseDTO
+            {
+                Id = createdCategory.Id,
+                Name = createdCategory.Name,
+                Description = createdCategory.Description,
+                CreatedAt = createdCategory.CreatedAt
+            };
+
+            return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.Id }, categoryDto);
         }
 
-        // PUT: api/Category/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, Category category)
+        public async Task<ActionResult<CategoryResponseDTO>> UpdateCategory(int id, UpdateCategoryDTO updateCategoryDto)
         {
-            if (id != category.CategoryID)
-                return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            _context.Entry(category).State = EntityState.Modified;
+            var existingCategory = await _categoryService.GetCategoryByIdAsync(id);
+            if (existingCategory == null)
+                return NotFound($"ID'si {id} olan kategori bulunamadı.");
 
-            try
+            // Sadece değişen alanları güncelle
+            if (updateCategoryDto.Name != null)
+                existingCategory.Name = updateCategoryDto.Name;
+            if (updateCategoryDto.Description != null)
+                existingCategory.Description = updateCategoryDto.Description;
+
+            var updatedCategory = await _categoryService.UpdateCategoryAsync(id, existingCategory);
+            if (updatedCategory == null)
+                return BadRequest("Kategori güncellenemedi.");
+
+            var categoryDto = new CategoryResponseDTO
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Categories.Any(e => e.CategoryID == id))
-                    return NotFound();
-                else
-                    throw;
-            }
+                Id = updatedCategory.Id,
+                Name = updatedCategory.Name,
+                Description = updatedCategory.Description,
+                CreatedAt = updatedCategory.CreatedAt
+            };
 
-            return NoContent();
+            return Ok(categoryDto);
         }
 
-        // DELETE: api/Category/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
-                return NotFound();
-
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            var result = await _categoryService.DeleteCategoryAsync(id);
+            if (!result)
+                return NotFound($"ID'si {id} olan kategori bulunamadı.");
 
             return NoContent();
+        }
+
+        [HttpGet("{id}/products")]
+        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetCategoryProducts(int id)
+        {
+            var products = await _categoryService.GetCategoryProductsAsync(id);
+            if (products == null)
+                return NotFound($"ID'si {id} olan kategori bulunamadı.");
+
+            var productDtos = products.Select(p => new ProductResponseDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category?.Name,
+                CreatedAt = p.CreatedAt
+            });
+            return Ok(productDtos);
         }
     }
 }
