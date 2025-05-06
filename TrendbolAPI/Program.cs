@@ -4,6 +4,8 @@ using TrendbolAPI.Repositories.Implementations;
 using TrendbolAPI.Repositories.Interfaces;
 using TrendbolAPI.Services.Implementations;
 using TrendbolAPI.Services.Interfaces;
+using TrendbolAPI.Factories;
+using TrendbolAPI.Strategies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Database 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<TrendbolContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Dependency injections, Transient = yeni instance , Scoped = her request için yeni instance, Singleton = 1 instance   

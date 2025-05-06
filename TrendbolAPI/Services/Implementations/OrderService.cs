@@ -20,12 +20,12 @@ namespace TrendbolAPI.Services.Implementations
             return await _orderRepository.GetAllAsync();
         }
 
-        public async Task<Order> GetOrderByIdAsync(int id)
+        public async Task<Order?> GetOrderByIdAsync(int id)
         {
             return await _orderRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<Order>> GetOrdersByUserIdAsync(int userId)
+        public async Task<IEnumerable<Order>> GetUserOrdersAsync(int userId)
         {
             return await _orderRepository.GetByUserIdAsync(userId);
         }
@@ -35,7 +35,7 @@ namespace TrendbolAPI.Services.Implementations
             return await _orderRepository.AddAsync(order);
         }
 
-        public async Task<Order> UpdateOrderStatusAsync(int id, string status)
+        public async Task<Order?> UpdateOrderStatusAsync(int id, string status)
         {
             var order = await _orderRepository.GetByIdAsync(id);
             if (order == null)

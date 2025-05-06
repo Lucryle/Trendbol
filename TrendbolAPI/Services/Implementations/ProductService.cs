@@ -20,12 +20,15 @@ namespace TrendbolAPI.Services.Implementations
 
         public async Task<Product> GetProductByIdAsync(int id)
         {
-            return await _productRepository.GetByIdAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                throw new KeyNotFoundException($"Product with ID {id} not found.");
+            return product;
         }
 
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
         {
-            return await _productRepository.GetByCategoryIdAsync(categoryId);
+            return await _productRepository.GetProductsByCategoryAsync(categoryId);
         }
 
         public async Task<Product> CreateProductAsync(Product product)
@@ -37,7 +40,7 @@ namespace TrendbolAPI.Services.Implementations
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
             if (existingProduct == null)
-                return null;
+                throw new KeyNotFoundException($"Product with ID {id} not found.");
 
             product.Id = id;
             return await _productRepository.UpdateAsync(product);
@@ -45,12 +48,16 @@ namespace TrendbolAPI.Services.Implementations
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            return await _productRepository.DeleteAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return false;
+
+            return await _productRepository.DeleteAsync(product);
         }
 
         public async Task<IEnumerable<Product>> SearchProductsAsync(string searchTerm)
         {
-            return await _productRepository.SearchAsync(searchTerm);
+            return await _productRepository.SearchProductsAsync(searchTerm);
         }
 
         public async Task<bool> UpdateProductStockAsync(int id, int quantity)
@@ -60,8 +67,8 @@ namespace TrendbolAPI.Services.Implementations
                 return false;
 
             product.StockQuantity = quantity;
-            var updatedProduct = await _productRepository.UpdateAsync(product);
-            return updatedProduct != null;
+            await _productRepository.UpdateAsync(product);
+            return true;
         }
     }
 } 

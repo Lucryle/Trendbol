@@ -7,9 +7,9 @@ namespace TrendbolAPI.Repositories.Implementations
 {
     public class UserRepository : IUserRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly TrendbolContext _context;
 
-        public UserRepository(ApplicationDbContext context)
+        public UserRepository(TrendbolContext context)
         {
             _context = context;
         }

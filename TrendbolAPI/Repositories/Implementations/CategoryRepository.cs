@@ -7,9 +7,9 @@ namespace TrendbolAPI.Repositories.Implementations
 {
     public class CategoryRepository : ICategoryRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly TrendbolContext _context;
 
-        public CategoryRepository(ApplicationDbContext context)
+        public CategoryRepository(TrendbolContext context)
         {
             _context = context;
         }

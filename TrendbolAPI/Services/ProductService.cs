@@ -24,34 +24,31 @@ namespace TrendbolAPI.Services
             return await _productRepository.GetAllAsync();
         }
 
-        public async Task<Product?> GetProductByIdAsync(int id)
-        {
-            return await _productRepository.GetByIdAsync(id);
-        }
-
-        public async Task<Product> CreateProductAsync(CreateProductDTO createProductDto)
-        {
-            var product = _productFactory.CreateProduct(createProductDto);
-            return await _productRepository.AddAsync(product);
-        }
-
-        public async Task<Product?> UpdateProductAsync(int id, UpdateProductDTO updateProductDto)
+        public async Task<Product> GetProductByIdAsync(int id)
         {
             var product = await _productRepository.GetByIdAsync(id);
             if (product == null)
-                return null;
+                throw new KeyNotFoundException($"Product with ID {id} not found.");
+            return product;
+        }
 
-            if (updateProductDto.Name != null)
-                product.Name = updateProductDto.Name;
-            if (updateProductDto.Description != null)
-                product.Description = updateProductDto.Description;
-            if (updateProductDto.Price.HasValue)
-                product.Price = updateProductDto.Price.Value;
-            if (updateProductDto.StockQuantity.HasValue)
-                product.StockQuantity = updateProductDto.StockQuantity.Value;
-            if (updateProductDto.CategoryId.HasValue)
-                product.CategoryId = updateProductDto.CategoryId.Value;
+        public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
+        {
+            return await _productRepository.GetProductsByCategoryAsync(categoryId);
+        }
 
+        public async Task<Product> CreateProductAsync(Product product)
+        {
+            return await _productRepository.AddAsync(product);
+        }
+
+        public async Task<Product> UpdateProductAsync(int id, Product product)
+        {
+            var existingProduct = await _productRepository.GetByIdAsync(id);
+            if (existingProduct == null)
+                throw new KeyNotFoundException($"Product with ID {id} not found.");
+
+            product.Id = id; // Ensure the ID matches
             return await _productRepository.UpdateAsync(product);
         }
 
@@ -62,6 +59,22 @@ namespace TrendbolAPI.Services
                 return false;
 
             await _productRepository.DeleteAsync(product);
+            return true;
+        }
+
+        public async Task<IEnumerable<Product>> SearchProductsAsync(string searchTerm)
+        {
+            return await _productRepository.SearchProductsAsync(searchTerm);
+        }
+
+        public async Task<bool> UpdateProductStockAsync(int id, int quantity)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return false;
+
+            product.StockQuantity = quantity;
+            await _productRepository.UpdateAsync(product);
             return true;
         }
     }

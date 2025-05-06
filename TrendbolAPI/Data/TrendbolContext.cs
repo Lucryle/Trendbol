@@ -12,8 +12,6 @@ namespace TrendbolAPI.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<Category> Categories { get; set; }
 
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -27,21 +25,20 @@ namespace TrendbolAPI.Data
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Category)
                 .WithMany()
-                .HasForeignKey(p => p.CategoryID)
+                .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);  // kategori silinirse ürün silinsin
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Product)
                 .WithMany()
-                .HasForeignKey(o => o.ProductID)
+                .HasForeignKey(o => o.ProductId)
                 .OnDelete(DeleteBehavior.Cascade); // ürün silinirse sipariş silinsin
 
             modelBuilder.Entity<Order>()
-                .HasOne(o => o.Customer)
+                .HasOne(o => o.User)
                 .WithMany()
-                .HasForeignKey(o => o.CustomerID)
+                .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // kullanıcı silinirse sipariş silinsin
         }
-
     }
 }

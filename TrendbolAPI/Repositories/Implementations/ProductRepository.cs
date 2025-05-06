@@ -7,9 +7,9 @@ namespace TrendbolAPI.Repositories.Implementations
 {
     public class ProductRepository : IProductRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly TrendbolContext _context;
 
-        public ProductRepository(ApplicationDbContext context)
+        public ProductRepository(TrendbolContext context)
         {
             _context = context;
         }
@@ -21,14 +21,14 @@ namespace TrendbolAPI.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<Product> GetByIdAsync(int id)
+        public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<IEnumerable<Product>> GetByCategoryIdAsync(int categoryId)
+        public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
         {
             return await _context.Products
                 .Include(p => p.Category)
@@ -50,18 +50,14 @@ namespace TrendbolAPI.Repositories.Implementations
             return product;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Product product)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-                return false;
-
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
+        public async Task<IEnumerable<Product>> SearchProductsAsync(string searchTerm)
         {
             return await _context.Products
                 .Include(p => p.Category)

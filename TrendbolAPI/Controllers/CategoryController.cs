@@ -119,7 +119,7 @@ namespace TrendbolAPI.Controllers
         [HttpGet("{id}/products")]
         public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetCategoryProducts(int id)
         {
-            var products = await _categoryService.GetCategoryProductsAsync(id);
+            var products = await _categoryService.GetProductsInCategoryAsync(id);
             if (products == null)
                 return NotFound($"ID'si {id} olan kategori bulunamadı.");
 

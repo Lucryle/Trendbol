@@ -7,9 +7,9 @@ namespace TrendbolAPI.Repositories.Implementations
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly TrendbolContext _context;
 
-        public OrderRepository(ApplicationDbContext context)
+        public OrderRepository(TrendbolContext context)
         {
             _context = context;
         }

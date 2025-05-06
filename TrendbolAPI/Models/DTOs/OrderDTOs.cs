@@ -20,19 +20,19 @@ namespace TrendbolAPI.Models.DTOs
         [Required(ErrorMessage = "Sipariş durumu zorunludur.")]
         [RegularExpression("^(Pending|Processing|Shipped|Delivered|Cancelled)$", 
             ErrorMessage = "Geçersiz sipariş durumu. Geçerli durumlar: Pending, Processing, Shipped, Delivered, Cancelled")]
-        public string Status { get; set; }
+        public string Status { get; set; } = "Pending";
     }
 
     public class OrderResponseDTO
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
+        public string? ProductName { get; set; }
         public int Quantity { get; set; }
         public decimal TotalAmount { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = "Pending";
         public DateTime CreatedAt { get; set; }
     }
 } 
