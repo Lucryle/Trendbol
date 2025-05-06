@@ -12,17 +12,7 @@ namespace TrendbolAPI.Models
         public DateTime CreatedAt{get; set;}
         public bool IsVerified{get; set;}
 
-        public User(int userID, string name, string email, string password, string role, DateTime createdAt, bool isVerified)
-        {
-            UserID = userID;
-            Name = name;
-            Email = email;
-            Password = password;
-            Role = role;
-            CreatedAt = createdAt;
-            IsVerified = isVerified;
-        }
+        public ICollection<Product> Products { get; set; } = new List<Product>(); // seller için sattığı ürünler
 
-        // TODO: Fonksiyonlar buraya eklenecek
     }
 }

@@ -1,25 +1,20 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TrendbolAPI.Models
 {
     public class Product
     {
-        public int ProductID{get; set;}
-        public string Name{get; set;}
-        public string Description{get; set;}
-        public float Price{get; set;}
-        public int Stock{get; set;}
-        public int SellerID{get; set;}
-        public string Category{get; set;}
-        public Product(int productID, string name, string description, float price, int stock, int sellerID, string category)
-        {
-            ProductID = productID;
-            Name = name;
-            Description = description;
-            Price = price;
-            Stock = stock;
-            SellerID = sellerID;
-            Category = category;
-        }
+        public int ProductID { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public float Price { get; set; }
+        public int Stock { get; set; }
+        public int SellerID { get; set; } // Foreign Key
+        public int CategoryID { get; set; }
+        public Category Category { get; set; }  // Navigasyon property
 
-        // TODO: Fonksiyonlar buraya eklenecek
+        // Navigation property
+        [ForeignKey("SellerID")]
+        public User Seller { get; set; }
     }
 }
