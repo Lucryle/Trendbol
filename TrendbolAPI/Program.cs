@@ -5,7 +5,6 @@ using TrendbolAPI.Repositories.Interfaces;
 using TrendbolAPI.Services.Implementations;
 using TrendbolAPI.Services.Interfaces;
 using TrendbolAPI.Factories;
-using TrendbolAPI.Strategies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,11 +26,6 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductFactory, ProductFactory>();
-
-builder.Services.AddScoped<IPaymentStrategy, CreditCardPaymentStrategy>();
-builder.Services.AddScoped<IPaymentStrategy, BankTransferPaymentStrategy>();
-builder.Services.AddScoped<IPaymentStrategy, PayPalPaymentStrategy>();
-builder.Services.AddScoped<PaymentContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
