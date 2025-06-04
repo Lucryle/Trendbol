@@ -1,24 +1,24 @@
 using TrendbolAPI.Models;
-using TrendbolAPI.Models.DTOs;
 
 namespace TrendbolAPI.Factories
 {
     public interface IProductFactory
     {
-        Product CreateProduct(CreateProductDTO createProductDto);
+        Product CreateProduct(Product product);
     }
 
     public class ProductFactory : IProductFactory
     {
-        public Product CreateProduct(CreateProductDTO createProductDto)
+        public Product CreateProduct(Product product)
         {
             return new Product
             {
-                Name = createProductDto.Name,
-                Description = createProductDto.Description,
-                Price = createProductDto.Price,
-                StockQuantity = createProductDto.StockQuantity,
-                CategoryId = createProductDto.CategoryId,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                SellerId = product.SellerId,
+                ImageUrl = product.ImageUrl,
                 CreatedAt = DateTime.UtcNow
             };
         }

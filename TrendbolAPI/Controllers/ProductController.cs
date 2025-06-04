@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TrendbolAPI.Models;
-using TrendbolAPI.Models.DTOs;
 using TrendbolAPI.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace TrendbolAPI.Controllers
 {
@@ -17,136 +17,66 @@ namespace TrendbolAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetAllProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
         {
             var products = await _productService.GetAllProductsAsync();
-            var productDtos = products.Select(p => new ProductResponseDTO
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category?.Name,
-                CreatedAt = p.CreatedAt
-            });
-            return Ok(productDtos);
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProductResponseDTO>> GetProductById(int id)
+        public async Task<ActionResult<Product>> GetProductById(int id)
         {
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
                 return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
-            var productDto = new ProductResponseDTO
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                StockQuantity = product.StockQuantity,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name,
-                CreatedAt = product.CreatedAt
-            };
-            return Ok(productDto);
-        }
-
-        [HttpGet("category/{categoryId}")]
-        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetProductsByCategory(int categoryId)
-        {
-            var products = await _productService.GetProductsByCategoryAsync(categoryId);
-            var productDtos = products.Select(p => new ProductResponseDTO
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category?.Name,
-                CreatedAt = p.CreatedAt
-            });
-            return Ok(productDtos);
+            return Ok(product);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ProductResponseDTO>> CreateProduct(CreateProductDTO createProductDto)
+        public async Task<ActionResult<Product>> CreateProduct([FromBody] Product product)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(product.Name))
+                return BadRequest("Ürün adı boş olamaz.");
 
-            var product = new Product
-            {
-                Name = createProductDto.Name,
-                Description = createProductDto.Description,
-                Price = createProductDto.Price,
-                StockQuantity = createProductDto.StockQuantity,
-                CategoryId = createProductDto.CategoryId,
-                CreatedAt = DateTime.UtcNow
-            };
+            if (string.IsNullOrWhiteSpace(product.Description))
+                return BadRequest("Ürün açıklaması boş olamaz.");
 
+            if (product.Price <= 0)
+                return BadRequest("Ürün fiyatı 0'dan büyük olmalıdır.");
+
+            if (product.StockQuantity < 0)
+                return BadRequest("Stok miktarı negatif olamaz.");
+
+            product.CreatedAt = DateTime.UtcNow;
             var createdProduct = await _productService.CreateProductAsync(product);
-            if (createdProduct == null)
-                return BadRequest("Ürün oluşturulamadı.");
-
-            var productDto = new ProductResponseDTO
-            {
-                Id = createdProduct.Id,
-                Name = createdProduct.Name,
-                Description = createdProduct.Description,
-                Price = createdProduct.Price,
-                StockQuantity = createdProduct.StockQuantity,
-                CategoryId = createdProduct.CategoryId,
-                CategoryName = createdProduct.Category?.Name,
-                CreatedAt = createdProduct.CreatedAt
-            };
-
-            return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, productDto);
+            
+            return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ProductResponseDTO>> UpdateProduct(int id, UpdateProductDTO updateProductDto)
+        public async Task<ActionResult<Product>> UpdateProduct(int id, [FromBody] Product product)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var existingProduct = await _productService.GetProductByIdAsync(id);
             if (existingProduct == null)
                 return NotFound($"ID'si {id} olan ürün bulunamadı.");
 
-            // Sadece değişen alanları güncelle
-            if (updateProductDto.Name != null)
-                existingProduct.Name = updateProductDto.Name;
-            if (updateProductDto.Description != null)
-                existingProduct.Description = updateProductDto.Description;
-            if (updateProductDto.Price.HasValue)
-                existingProduct.Price = updateProductDto.Price.Value;
-            if (updateProductDto.StockQuantity.HasValue)
-                existingProduct.StockQuantity = updateProductDto.StockQuantity.Value;
-            if (updateProductDto.CategoryId.HasValue)
-                existingProduct.CategoryId = updateProductDto.CategoryId.Value;
+            if (!string.IsNullOrWhiteSpace(product.Name))
+                existingProduct.Name = product.Name;
 
+            if (!string.IsNullOrWhiteSpace(product.Description))
+                existingProduct.Description = product.Description;
+
+            if (product.Price > 0)
+                existingProduct.Price = product.Price;
+
+            if (product.StockQuantity >= 0)
+                existingProduct.StockQuantity = product.StockQuantity;
+
+            existingProduct.UpdatedAt = DateTime.UtcNow;
             var updatedProduct = await _productService.UpdateProductAsync(id, existingProduct);
-            if (updatedProduct == null)
-                return BadRequest("Ürün güncellenemedi.");
-
-            var productDto = new ProductResponseDTO
-            {
-                Id = updatedProduct.Id,
-                Name = updatedProduct.Name,
-                Description = updatedProduct.Description,
-                Price = updatedProduct.Price,
-                StockQuantity = updatedProduct.StockQuantity,
-                CategoryId = updatedProduct.CategoryId,
-                CategoryName = updatedProduct.Category?.Name,
-                CreatedAt = updatedProduct.CreatedAt
-            };
-
-            return Ok(productDto);
+            
+            return Ok(updatedProduct);
         }
 
         [HttpDelete("{id}")]
@@ -160,24 +90,13 @@ namespace TrendbolAPI.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> SearchProducts([FromQuery] string searchTerm)
+        public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string searchTerm)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return BadRequest("Arama terimi boş olamaz.");
 
             var products = await _productService.SearchProductsAsync(searchTerm);
-            var productDtos = products.Select(p => new ProductResponseDTO
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category?.Name,
-                CreatedAt = p.CreatedAt
-            });
-            return Ok(productDtos);
+            return Ok(products);
         }
 
         [HttpPut("{id}/stock")]

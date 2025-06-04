@@ -5,40 +5,56 @@ namespace TrendbolAPI.Data
 {
     public class TrendbolContext : DbContext
     {
-        public TrendbolContext(DbContextOptions<TrendbolContext> options) : base(options) { }
+        public TrendbolContext(DbContextOptions<TrendbolContext> options) : base(options)
+        {
+        }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<Category> Categories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Seller)
-                .WithMany(u => u.Products)
-                .HasForeignKey(p => p.SellerID)
-                .OnDelete(DeleteBehavior.Restrict);  // satıcı (foreign key) silinirse ürün silinmesin (silinmesini zaten yapamayız çünkü foreign key)
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Password).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.VerificationCode).HasMaxLength(6);
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
 
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Category)
-                .WithMany()
-                .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);  // kategori silinirse ürün silinsin
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired();
+                entity.Property(e => e.Price).IsRequired().HasPrecision(18, 2);
+                entity.Property(e => e.StockQuantity).IsRequired();
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.HasOne(e => e.Seller)
+                    .WithMany(u => u.Products)
+                    .HasForeignKey(e => e.SellerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Product)
-                .WithMany()
-                .HasForeignKey(o => o.ProductId)
-                .OnDelete(DeleteBehavior.Cascade); // ürün silinirse sipariş silinsin
-
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.User)
-                .WithMany()
-                .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Cascade); // kullanıcı silinirse sipariş silinsin
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TotalAmount).IsRequired().HasPrecision(18, 2);
+                entity.Property(e => e.Status).IsRequired();
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

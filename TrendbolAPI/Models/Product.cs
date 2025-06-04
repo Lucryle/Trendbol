@@ -7,18 +7,29 @@ namespace TrendbolAPI.Models
     {
         [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+
+        [Required]
+        public string? Name { get; set; }
+
+        [Required]
+        public string? Description { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
+
         public int StockQuantity { get; set; }
-        public int SellerID { get; set; }
-        public int CategoryId { get; set; }
-        public DateTime CreatedAt { get; set; }
 
-        [ForeignKey("SellerID")]
-        public User Seller { get; set; }
+        public string? ImageUrl { get; set; }
 
-        [ForeignKey("CategoryId")]
-        public Category Category { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+
+        // Foreign key for seller
+        public int SellerId { get; set; }
+        public User? Seller { get; set; }
+
+        // siparişler için navigation property
+        public ICollection<Order>? Orders { get; set; } = new List<Order>();
     }
 }

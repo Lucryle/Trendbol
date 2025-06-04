@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TrendbolAPI.Models;
-using TrendbolAPI.Models.DTOs;
 using TrendbolAPI.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace TrendbolAPI.Controllers
 {
@@ -17,108 +17,66 @@ namespace TrendbolAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetAllUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
-            var userDtos = users.Select(u => new UserResponseDTO
-            {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                CreatedAt = u.CreatedAt
-            });
-            return Ok(userDtos);
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserResponseDTO>> GetUserById(int id)
+        public async Task<ActionResult<User>> GetUserById(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
                 return NotFound($"ID'si {id} olan kullanıcı bulunamadı.");
 
-            var userDto = new UserResponseDTO
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                CreatedAt = user.CreatedAt
-            };
-            return Ok(userDto);
+            return Ok(user);
         }
 
         [HttpPost]
-        public async Task<ActionResult<UserResponseDTO>> CreateUser(CreateUserDTO createUserDto)
+        public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(user.FirstName))
+                return BadRequest("Ad alanı boş olamaz.");
 
-            var user = new User
-            {
-                FirstName = createUserDto.FirstName,
-                LastName = createUserDto.LastName,
-                Email = createUserDto.Email,
-                Password = createUserDto.Password, 
-                PhoneNumber = createUserDto.PhoneNumber,
-                CreatedAt = DateTime.UtcNow
-            };
+            if (string.IsNullOrWhiteSpace(user.LastName))
+                return BadRequest("Soyad alanı boş olamaz.");
 
+            if (string.IsNullOrWhiteSpace(user.Email))
+                return BadRequest("Email alanı boş olamaz.");
+
+            if (!new EmailAddressAttribute().IsValid(user.Email))
+                return BadRequest("Geçerli bir email adresi giriniz.");
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+                return BadRequest("Şifre alanı boş olamaz.");
+
+            if (user.Password.Length < 6)
+                return BadRequest("Şifre en az 6 karakter olmalıdır.");
+
+            if (string.IsNullOrWhiteSpace(user.PhoneNumber))
+                return BadRequest("Telefon numarası boş olamaz.");
+
+            if (!new PhoneAttribute().IsValid(user.PhoneNumber))
+                return BadRequest("Geçerli bir telefon numarası giriniz.");
+
+            user.CreatedAt = DateTime.UtcNow;
             var createdUser = await _userService.CreateUserAsync(user);
-            if (createdUser == null)
-                return BadRequest("Kullanıcı oluşturulamadı.");
-
-            var userDto = new UserResponseDTO
-            {
-                Id = createdUser.Id,
-                FirstName = createdUser.FirstName,
-                LastName = createdUser.LastName,
-                Email = createdUser.Email,
-                PhoneNumber = createdUser.PhoneNumber,
-                CreatedAt = createdUser.CreatedAt
-            };
-
-            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, userDto);
+            
+            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserResponseDTO>> UpdateUser(int id, UpdateUserDTO updateUserDto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var existingUser = await _userService.GetUserByIdAsync(id);
-            if (existingUser == null)
-                return NotFound($"ID'si {id} olan kullanıcı bulunamadı.");
-
-            // Sadece değişen alanları güncelle
-            if (updateUserDto.FirstName != null)
-                existingUser.FirstName = updateUserDto.FirstName;
-            if (updateUserDto.LastName != null)
-                existingUser.LastName = updateUserDto.LastName;
-            if (updateUserDto.Email != null)
-                existingUser.Email = updateUserDto.Email;
-            if (updateUserDto.PhoneNumber != null)
-                existingUser.PhoneNumber = updateUserDto.PhoneNumber;
-
-            var updatedUser = await _userService.UpdateUserAsync(id, existingUser);
+            user.Id = id;
+            var updatedUser = await _userService.UpdateUserAsync(user);
             if (updatedUser == null)
-                return BadRequest("Kullanıcı güncellenemedi.");
-
-            var userDto = new UserResponseDTO
-            {
-                Id = updatedUser.Id,
-                FirstName = updatedUser.FirstName,
-                LastName = updatedUser.LastName,
-                Email = updatedUser.Email,
-                PhoneNumber = updatedUser.PhoneNumber,
-                CreatedAt = updatedUser.CreatedAt
-            };
-
-            return Ok(userDto);
+                return NotFound();
+            return Ok(updatedUser);
         }
 
         [HttpDelete("{id}")]
@@ -129,30 +87,6 @@ namespace TrendbolAPI.Controllers
                 return NotFound($"ID'si {id} olan kullanıcı bulunamadı.");
 
             return NoContent();
-        }
-
-        [HttpPost("login")]
-        public async Task<ActionResult<UserResponseDTO>> Login([FromBody] LoginDTO loginDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var isValid = await _userService.ValidateUserCredentialsAsync(loginDto.Email, loginDto.Password);
-            if (!isValid)
-                return Unauthorized("Geçersiz email veya şifre.");
-
-            var user = await _userService.GetUserByEmailAsync(loginDto.Email);
-            var userDto = new UserResponseDTO
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                CreatedAt = user.CreatedAt
-            };
-
-            return Ok(userDto);
         }
     }
 }

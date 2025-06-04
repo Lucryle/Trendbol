@@ -8,14 +8,37 @@ namespace TrendbolAPI.Models
     {
         [Key]
         public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string PhoneNumber { get; set; }
-        public string Role { get; set; }
-        public DateTime CreatedAt { get; set; }
+
+        [Required(ErrorMessage = "Ad alanı zorunludur.")]
+        [StringLength(50)]
+        public string? FirstName { get; set; }
+
+        [Required(ErrorMessage = "Soyad alanı zorunludur.")]
+        [StringLength(50)]
+        public string? LastName { get; set; }
+
+        [Required(ErrorMessage = "Email alanı zorunludur.")]
+        [EmailAddress(ErrorMessage = "Geçerli bir email adresi giriniz.")]
+        [StringLength(100)]
+        public string Email { get; set; } = null!;
+
+        [Required(ErrorMessage = "Şifre alanı zorunludur.")]
+        [StringLength(100)]
+        public string? Password { get; set; }
+
+        [Required(ErrorMessage = "Telefon numarası zorunludur.")]
+        [Phone(ErrorMessage = "Geçerli bir telefon numarası giriniz.")]
+        [StringLength(20)]
+        public string? PhoneNumber { get; set; }
+
         public bool IsVerified { get; set; }
+        public string? VerificationCode { get; set; }
+        public DateTime? VerificationCodeExpiry { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public string? Role { get; set; } = "User"; // Default role is User
+
+        public DateTime? UpdatedAt { get; set; }
 
         public ICollection<Product> Products { get; set; } = new List<Product>(); // seller için sattığı ürünler
     }

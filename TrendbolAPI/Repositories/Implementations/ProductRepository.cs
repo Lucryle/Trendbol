@@ -16,24 +16,12 @@ namespace TrendbolAPI.Repositories.Implementations
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _context.Products
-                .Include(p => p.Category)
-                .ToListAsync();
+            return await _context.Products.Include(p => p.Seller).ToListAsync();
         }
 
-        public async Task<Product?> GetByIdAsync(int id)
+        public async Task<Product> GetByIdAsync(int id)
         {
-            return await _context.Products
-                .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.Id == id);
-        }
-
-        public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
-        {
-            return await _context.Products
-                .Include(p => p.Category)
-                .Where(p => p.CategoryId == categoryId)
-                .ToListAsync();
+            return await _context.Products.Include(p => p.Seller).FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<Product> AddAsync(Product product)
@@ -60,7 +48,7 @@ namespace TrendbolAPI.Repositories.Implementations
         public async Task<IEnumerable<Product>> SearchProductsAsync(string searchTerm)
         {
             return await _context.Products
-                .Include(p => p.Category)
+                .Include(p => p.Seller)
                 .Where(p => p.Name.Contains(searchTerm) || p.Description.Contains(searchTerm))
                 .ToListAsync();
         }
