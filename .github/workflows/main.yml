@@ -45,7 +45,9 @@ jobs:
     # 5. Testleri çalıştırır
     - name: Test
       working-directory: ./UnitTests
-      run: dotnet test --no-build --verbosity normal
+      run: |
+        dotnet restore
+        dotnet test --no-build --verbosity normal
 
     # 6. Docker image'ı oluşturur ve push eder
     - name: Set up Docker Buildx
