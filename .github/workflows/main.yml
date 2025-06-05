@@ -51,20 +51,20 @@ jobs:
 
     - name: Debug Docker Login
       run: |
-        echo "Username: ${{ secrets.DOCKERHUB_USERNAME }}"
-        echo "Username lengt: ${#DOCKERHUB_USERNAME}"
-        echo "Token length: ${#DOCKERHUB_TOKEN}"
+        echo "Username: ${{ secrets.DOCKERUSERNAME }}"
+        echo "Username lengt: ${#DOCKERUSERNAME}"
+        echo "Token length: ${#DOCKERTOKEN}"
         docker version
         docker info
 
     - name: Login to DockerHub
       run: |
-        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        echo ${{ secrets.DOCKERTOKEN }} | docker login -u ${{ secrets.DOCKERUSERNAME }} --password-stdin
       continue-on-error: true
 
     - name: Check Login Status
       run: |
-        docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+        docker login -u ${{ secrets.DOCKERUSERNAME }} -p ${{ secrets.DOCKERTOKEN }}
       continue-on-error: true
 
     - name: Build and push Docker image
