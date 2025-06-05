@@ -48,26 +48,10 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Debug Docker Login
-      run: |
-        echo "Username: ${{ env.DOCKER_USERNAME }}"
-        echo "Username length: ${#DOCKER_USERNAME}"
-        echo "Token length: ${#DOCKER_TOKEN}"
-        docker version
-        docker info
-
     - name: Login to DockerHub
       run: |
         echo "${{ env.DOCKER_TOKEN }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin
       continue-on-error: true
-
-    - name: Verify Docker Login
-      run: |
-        if ! docker info | grep -q "Username: ${{ env.DOCKER_USERNAME }}"; then
-          echo "Docker login failed. Please check your credentials."
-          exit 1
-        fi
-        echo "Docker login successful!"
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
