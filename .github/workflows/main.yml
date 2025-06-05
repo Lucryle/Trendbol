@@ -1,0 +1,74 @@
+# Bu dosya, GitHub Actions workflow'unu tanımlarMore actions
+# Her push işleminde otomatik olarak çalışır
+
+name: .NET CI/CD Pipeline
+
+# Workflow'un ne zaman çalışacağını belirtir
+on:
+  push:
+    branches: [ "main", "backend" ]  # main branch'e push yapıldığında veya backend branch'e push yapıldığında
+  pull_request:
+    branches: [ "main", "backend" ]  # main branch'e PR açıldığında veya backend branch'e PR açıldığında
+
+# Workflow'un çalışacağı ortamı tanımlar
+env:
+  DOTNET_VERSION: '7.0.x'  # .NET versiyonu
+  DOCKER_IMAGE_NAME: trendbol-api  # Docker image adı
+
+# Workflow'un adımlarını tanımlar
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest  # Ubuntu üzerinde çalışır
+
+    steps:
+    # 1. Kodu repository'den çeker
+    - uses: actions/checkout@v3
+
+    # 2. .NET SDK'yı kurar
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    # 3. Bağımlılıkları restore eder
+    - name: Restore dependencies
+      working-directory: ./TrendbolAPI
+      run: dotnet restore
+
+    # 4. Projeyi build eder
+    - name: Build
+      working-directory: ./TrendbolAPI
+      run: dotnet build --no-restore
+
+    # 5. Testleri çalıştırır
+    - name: Test
+      working-directory: ./UnitTests
+      run: dotnet test --no-build --verbosity normal
+
+    # 6. Docker image'ı oluşturur ve push eder
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Debug Docker Login
+      run: |
+        echo "Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Username length: ${#DOCKERHUB_USERNAME}"
+        echo "Token length: ${#DOCKERHUB_TOKEN}"
+        docker version
+        docker info
+
+    - name: Login to DockerHub
+      run: |
+        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      continue-on-error: true
+
+    - name: Check Login Status
+      run: |
+        docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      continue-on-error: true
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
