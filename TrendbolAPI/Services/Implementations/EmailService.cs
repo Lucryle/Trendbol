@@ -1,12 +1,14 @@
 using System.Net.Mail;
 using System.Net;
 using TrendbolAPI.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace TrendbolAPI.Services
 {
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
         private readonly string _smtpServer;
         private readonly int _smtpPort;
         private readonly string _smtpUsername;
@@ -14,9 +16,10 @@ namespace TrendbolAPI.Services
         private readonly string _fromEmail;
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
             _smtpServer = _configuration["EmailSettings:SmtpServer"] ?? throw new InvalidOperationException("SMTP Server not found in configuration");
             _smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? throw new InvalidOperationException("SMTP Port not found in configuration"));
             _smtpUsername = _configuration["EmailSettings:SmtpUsername"] ?? throw new InvalidOperationException("SMTP Username not found in configuration");
@@ -40,10 +43,12 @@ namespace TrendbolAPI.Services
                 };
 
                 await client.SendMailAsync(message);
+                _logger.LogInformation($"Email successfully sent to {to}");
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, $"Failed to send email to {to}. Error: {ex.Message}");
                 return false;
             }
         }

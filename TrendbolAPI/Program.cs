@@ -12,6 +12,12 @@ using TrendbolAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// User Secrets'ı etkinleştir
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 // MVC - Model View Controller , bizde view yok 
 builder.Services.AddControllers();
 

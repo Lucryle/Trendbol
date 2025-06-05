@@ -268,4 +268,10 @@ FodyWeavers.xsd
 *.msp
 
 # JetBrains Rider
-*.sln.iml 
+*.sln.iml
+
+# User Secrets
+**/secrets.json
+**/appsettings.*.json
+!**/appsettings.json
+!**/appsettings.Example.json 
