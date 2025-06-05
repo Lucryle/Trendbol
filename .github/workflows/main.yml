@@ -1,4 +1,4 @@
-# Bu dosya, GitHub Actions workflow'unu tanımlarMore actions
+# Bu dosya, GitHub Actions workflow'unu tanımlar
 # Her push işleminde otomatik olarak çalışır
 
 name: .NET CI/CD Pipeline
@@ -14,6 +14,8 @@ on:
 env:
   DOTNET_VERSION: '7.0.x'  # .NET versiyonu
   DOCKER_IMAGE_NAME: trendbol-api  # Docker image adı
+  DOCKER_USERNAME: ${{ secrets.DOCKERUSERNAME }}  # Docker Hub kullanıcı adı
+  DOCKER_TOKEN: ${{ secrets.DOCKERTOKEN }}  # Docker Hub token
 
 # Workflow'un adımlarını tanımlar
 jobs:
@@ -51,30 +53,19 @@ jobs:
 
     - name: Debug Docker Login
       run: |
-        echo "Username: $DOCKERUSERNAME"
-        echo "Username length: ${#DOCKERUSERNAME}"
-        echo "Token length: ${#DOCKERTOKEN}"
+        echo "Username: ${{ env.DOCKER_USERNAME }}"
+        echo "Username length: ${#DOCKER_USERNAME}"
+        echo "Token length: ${#DOCKER_TOKEN}"
         docker version
         docker info
-      env:
-        DOCKERUSERNAME: ${{ secrets.DOCKERUSERNAME }}
-        DOCKERTOKEN: ${{ secrets.DOCKERTOKEN }}
 
     - name: Login to DockerHub
       run: |
-        echo "$DOCKERTOKEN" | docker login -u "$DOCKERUSERNAME" --password-stdin
-        env:
-            DOCKERUSERNAME: ${{ secrets.DOCKERUSERNAME }}
-            DOCKERTOKEN: ${{ secrets.DOCKERTOKEN }}
-      continue-on-error: false
-
-    - name: Check Login Status
-      run: |
-        docker login -u ${{ secrets.DOCKERUSERNAME }} -p ${{ secrets.DOCKERTOKEN }}
-      continue-on-error: false
+        echo "${{ env.DOCKER_TOKEN }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
+        tags: ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
