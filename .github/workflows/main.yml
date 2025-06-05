@@ -34,20 +34,15 @@ jobs:
 
     # 3. Bağımlılıkları restore eder
     - name: Restore dependencies
-      working-directory: ./TrendbolAPI
       run: dotnet restore
 
     # 4. Projeyi build eder
     - name: Build
-      working-directory: ./TrendbolAPI
       run: dotnet build --no-restore
 
     # 5. Testleri çalıştırır
     - name: Test
-      working-directory: ./UnitTests
-      run: |
-        dotnet restore
-        dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal
 
     # 6. Docker image'ı oluşturur ve push eder
     - name: Set up Docker Buildx
