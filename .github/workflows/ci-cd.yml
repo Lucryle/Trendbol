@@ -19,6 +19,9 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest  # Ubuntu üzerinde çalışır
+    permissions:
+      contents: write
+      packages: write
 
     steps:
     # 1. Kodu repository'den çeker
@@ -64,7 +67,7 @@ jobs:
 
     - name: Check Login Status
       run: |
-        docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+        docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{secrets.DOCKERHUB_TOKEN}}
       continue-on-error: true
 
     - name: Build and push Docker image
