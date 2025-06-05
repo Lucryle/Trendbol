@@ -52,6 +52,7 @@ jobs:
     - name: Debug Docker Login
       run: |
         echo "Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Username length: ${#DOCKERHUB_USERNAME}"
         echo "Token length: ${#DOCKERHUB_TOKEN}"
         docker version
         docker info
