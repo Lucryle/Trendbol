@@ -34,7 +34,6 @@ namespace TrendbolAPI.Services.Implementations
                 Quantity = o.Quantity,
                 TotalAmount = o.TotalAmount,
                 Status = o.Status,
-                CreatedAt = o.CreatedAt,
                 ProductSellerId = o.Product?.SellerId ?? 0,
                 ProductSellerName = o.Product?.Seller != null ? $"{o.Product.Seller.FirstName} {o.Product.Seller.LastName}" : "Bilinmeyen Satıcı"
             });
@@ -61,7 +60,6 @@ namespace TrendbolAPI.Services.Implementations
                 Quantity = order.Quantity,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status,
-                CreatedAt = order.CreatedAt,
                 ProductSellerId = order.Product?.SellerId ?? 0,
                 ProductSellerName = order.Product?.Seller != null ? $"{order.Product.Seller.FirstName} {order.Product.Seller.LastName}" : "Bilinmeyen Satıcı"
             };
@@ -82,8 +80,7 @@ namespace TrendbolAPI.Services.Implementations
                 ProductName = o.Product != null ? o.Product.Name ?? "Bilinmeyen Ürün" : "Bilinmeyen Ürün",
                 Quantity = o.Quantity,
                 TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                CreatedAt = o.CreatedAt
+                Status = o.Status
             });
         }
 
@@ -104,8 +101,7 @@ namespace TrendbolAPI.Services.Implementations
                 ProductId = createOrderDto.ProductId,
                 Quantity = createOrderDto.Quantity,
                 TotalAmount = product.Price * createOrderDto.Quantity,
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow
+                Status = "Pending"
             };
 
             var createdOrder = await _orderRepository.AddAsync(order);
@@ -123,7 +119,6 @@ namespace TrendbolAPI.Services.Implementations
                 Quantity = createdOrder.Quantity,
                 TotalAmount = createdOrder.TotalAmount,
                 Status = createdOrder.Status,
-                CreatedAt = createdOrder.CreatedAt,
                 ProductSellerId = createdOrder.Product?.SellerId ?? 0,
                 ProductSellerName = createdOrder.Product?.Seller != null ? $"{createdOrder.Product.Seller.FirstName} {createdOrder.Product.Seller.LastName}" : "Bilinmeyen Satıcı"
             };
@@ -161,7 +156,6 @@ namespace TrendbolAPI.Services.Implementations
                 Quantity = updatedOrder.Quantity,
                 TotalAmount = updatedOrder.TotalAmount,
                 Status = updatedOrder.Status,
-                CreatedAt = updatedOrder.CreatedAt,
                 ProductSellerId = updatedOrder.Product?.SellerId ?? 0,
                 ProductSellerName = updatedOrder.Product?.Seller != null ? $"{updatedOrder.Product.Seller.FirstName} {updatedOrder.Product.Seller.LastName}" : "Bilinmeyen Satıcı"
             };

@@ -75,7 +75,7 @@ namespace TrendbolAPI.Controllers
                 if (userId == null)
                     return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
                 var createdOrder = await _orderService.CreateOrderFromDtoAsync(createOrderDto, userId.Value);
-                return CreatedAtAction(nameof(GetOrderById), new { id = createdOrder.Id }, createdOrder);
+                return Ok(createdOrder);
             }
             catch (KeyNotFoundException ex)
             {
@@ -183,9 +183,8 @@ namespace TrendbolAPI.Controllers
             if (string.IsNullOrWhiteSpace(order.Status))
                 return BadRequest("Sipariş durumu boş olamaz.");
 
-            order.CreatedAt = DateTime.UtcNow;
             var createdOrder = await _orderService.CreateOrderAsync(order);
-            return CreatedAtAction(nameof(GetOrderByIdLegacy), new { id = createdOrder.Id }, createdOrder);
+            return Ok(createdOrder);
         }
 
         [HttpPut("legacy/{id}/status")]

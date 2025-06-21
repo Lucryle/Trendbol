@@ -20,11 +20,6 @@ namespace TrendbolAPI.Models
 
         public int StockQuantity { get; set; }
 
-        public string? ImageUrl { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
-
         // Foreign key for seller
         public int SellerId { get; set; }
         public User? Seller { get; set; }

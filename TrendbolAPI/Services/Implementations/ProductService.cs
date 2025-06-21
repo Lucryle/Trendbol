@@ -32,9 +32,6 @@ namespace TrendbolAPI.Services.Implementations
                 Description = p.Description ?? string.Empty,
                 Price = p.Price,
                 StockQuantity = p.StockQuantity,
-                ImageUrl = p.ImageUrl,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
                 SellerId = p.SellerId,
                 SellerName = p.Seller != null ? $"{p.Seller.FirstName} {p.Seller.LastName}" : "Bilinmeyen Satıcı"
             });
@@ -61,9 +58,6 @@ namespace TrendbolAPI.Services.Implementations
                 Description = product.Description ?? string.Empty,
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl,
-                CreatedAt = product.CreatedAt,
-                UpdatedAt = product.UpdatedAt,
                 SellerId = product.SellerId,
                 SellerName = product.Seller != null ? $"{product.Seller.FirstName} {product.Seller.LastName}" : "Bilinmeyen Satıcı"
             };
@@ -82,9 +76,7 @@ namespace TrendbolAPI.Services.Implementations
                 Description = createProductDto.Description,
                 Price = createProductDto.Price,
                 StockQuantity = createProductDto.StockQuantity,
-                ImageUrl = createProductDto.ImageUrl,
-                SellerId = sellerId,
-                CreatedAt = DateTime.UtcNow
+                SellerId = sellerId
             };
 
             var createdProduct = await _productRepository.AddAsync(product);
@@ -96,9 +88,6 @@ namespace TrendbolAPI.Services.Implementations
                 Description = createdProduct.Description ?? string.Empty,
                 Price = createdProduct.Price,
                 StockQuantity = createdProduct.StockQuantity,
-                ImageUrl = createdProduct.ImageUrl,
-                CreatedAt = createdProduct.CreatedAt,
-                UpdatedAt = createdProduct.UpdatedAt,
                 SellerId = createdProduct.SellerId,
                 SellerName = createdProduct.Seller != null ? $"{createdProduct.Seller.FirstName} {createdProduct.Seller.LastName}" : "Bilinmeyen Satıcı"
             };
@@ -135,11 +124,6 @@ namespace TrendbolAPI.Services.Implementations
             if (updateProductDto.StockQuantity.HasValue && updateProductDto.StockQuantity.Value >= 0)
                 existingProduct.StockQuantity = updateProductDto.StockQuantity.Value;
 
-            if (!string.IsNullOrWhiteSpace(updateProductDto.ImageUrl))
-                existingProduct.ImageUrl = updateProductDto.ImageUrl;
-
-            existingProduct.UpdatedAt = DateTime.UtcNow;
-
             var updatedProduct = await _productRepository.UpdateAsync(existingProduct);
 
             return new ProductResponseDto
@@ -149,9 +133,6 @@ namespace TrendbolAPI.Services.Implementations
                 Description = updatedProduct.Description ?? string.Empty,
                 Price = updatedProduct.Price,
                 StockQuantity = updatedProduct.StockQuantity,
-                ImageUrl = updatedProduct.ImageUrl,
-                CreatedAt = updatedProduct.CreatedAt,
-                UpdatedAt = updatedProduct.UpdatedAt,
                 SellerId = updatedProduct.SellerId,
                 SellerName = updatedProduct.Seller != null ? $"{updatedProduct.Seller.FirstName} {updatedProduct.Seller.LastName}" : "Bilinmeyen Satıcı"
             };
@@ -195,9 +176,6 @@ namespace TrendbolAPI.Services.Implementations
                 Description = p.Description ?? string.Empty,
                 Price = p.Price,
                 StockQuantity = p.StockQuantity,
-                ImageUrl = p.ImageUrl,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
                 SellerId = p.SellerId,
                 SellerName = p.Seller != null ? $"{p.Seller.FirstName} {p.Seller.LastName}" : "Bilinmeyen Satıcı"
             });

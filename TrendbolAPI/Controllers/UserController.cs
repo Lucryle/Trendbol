@@ -60,7 +60,6 @@ namespace TrendbolAPI.Controllers
             if (!new PhoneAttribute().IsValid(user.PhoneNumber))
                 return BadRequest("Geçerli bir telefon numarası giriniz.");
 
-            user.CreatedAt = DateTime.UtcNow;
             var createdUser = await _userService.CreateUserAsync(user);
             
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);

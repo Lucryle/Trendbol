@@ -25,7 +25,6 @@ public class OrderServiceTests
         { 
             Id = 1, 
             UserId = 1,
-            CreatedAt = DateTime.UtcNow,
             TotalAmount = 100
         };
         _mockOrderRepository.Setup(repo => repo.GetByIdAsync(1))
@@ -47,8 +46,8 @@ public class OrderServiceTests
         // Arrange
         var expectedOrders = new List<Order>
         {
-            new Order { Id = 1, UserId = 1, CreatedAt = DateTime.UtcNow, TotalAmount = 100 },
-            new Order { Id = 2, UserId = 1, CreatedAt = DateTime.UtcNow, TotalAmount = 200 }
+            new Order { Id = 1, UserId = 1, TotalAmount = 100 },
+            new Order { Id = 2, UserId = 1, TotalAmount = 200 }
         };
         _mockOrderRepository.Setup(repo => repo.GetByUserIdAsync(1))
             .ReturnsAsync(expectedOrders);

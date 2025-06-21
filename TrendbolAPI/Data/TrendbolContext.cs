@@ -26,7 +26,6 @@ namespace TrendbolAPI.Data
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.VerificationCode).HasMaxLength(6);
-                entity.Property(e => e.CreatedAt).IsRequired();
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
@@ -37,7 +36,6 @@ namespace TrendbolAPI.Data
                 entity.Property(e => e.Description).IsRequired();
                 entity.Property(e => e.Price).IsRequired().HasPrecision(18, 2);
                 entity.Property(e => e.StockQuantity).IsRequired();
-                entity.Property(e => e.CreatedAt).IsRequired();
                 entity.HasOne(e => e.Seller)
                     .WithMany(u => u.Products)
                     .HasForeignKey(e => e.SellerId)
@@ -49,7 +47,6 @@ namespace TrendbolAPI.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.TotalAmount).IsRequired().HasPrecision(18, 2);
                 entity.Property(e => e.Status).IsRequired();
-                entity.Property(e => e.CreatedAt).IsRequired();
                 entity.HasOne(e => e.User)
                     .WithMany()
                     .HasForeignKey(e => e.UserId)

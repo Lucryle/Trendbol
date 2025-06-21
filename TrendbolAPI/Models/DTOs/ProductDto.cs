@@ -15,8 +15,6 @@ namespace TrendbolAPI.Models.DTOs
 
         [Required]
         public int StockQuantity { get; set; }
-
-        public string? ImageUrl { get; set; }
     }
 
     public class UpdateProductDto
@@ -27,8 +25,6 @@ namespace TrendbolAPI.Models.DTOs
         public decimal? Price { get; set; }
         
         public int? StockQuantity { get; set; }
-        
-        public string? ImageUrl { get; set; }
     }
 
     public class ProductResponseDto
@@ -38,9 +34,6 @@ namespace TrendbolAPI.Models.DTOs
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
-        public string? ImageUrl { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
         public int SellerId { get; set; }
         public string SellerName { get; set; } = string.Empty;
     }

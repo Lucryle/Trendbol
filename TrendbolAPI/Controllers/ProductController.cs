@@ -182,7 +182,6 @@ namespace TrendbolAPI.Controllers
             if (product.StockQuantity < 0)
                 return BadRequest("Stok miktarı negatif olamaz.");
 
-            product.CreatedAt = DateTime.UtcNow;
             var createdProduct = await _productService.CreateProductAsync(product);
             
             return CreatedAtAction(nameof(GetProductByIdLegacy), new { id = createdProduct.Id }, createdProduct);
@@ -207,7 +206,6 @@ namespace TrendbolAPI.Controllers
             if (product.StockQuantity >= 0)
                 existingProduct.StockQuantity = product.StockQuantity;
 
-            existingProduct.UpdatedAt = DateTime.UtcNow;
             var updatedProduct = await _productService.UpdateProductAsync(id, existingProduct);
             
             return Ok(updatedProduct);

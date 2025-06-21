@@ -20,6 +20,5 @@ namespace TrendbolAPI.Models
         public int Quantity { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = "Pending";
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

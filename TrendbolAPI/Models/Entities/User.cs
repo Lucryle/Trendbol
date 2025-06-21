@@ -34,11 +34,8 @@ namespace TrendbolAPI.Models
         public bool IsVerified { get; set; }
         public string? VerificationCode { get; set; }
         public DateTime? VerificationCodeExpiry { get; set; }
-        public DateTime CreatedAt { get; set; }
 
         public string? Role { get; set; } = "User"; // Default role is User
-
-        public DateTime? UpdatedAt { get; set; }
 
         public ICollection<Product> Products { get; set; } = new List<Product>(); // seller için sattığı ürünler
     }

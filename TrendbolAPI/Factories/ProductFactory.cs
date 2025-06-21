@@ -17,9 +17,7 @@ namespace TrendbolAPI.Factories
                 Description = product.Description,
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
-                SellerId = product.SellerId,
-                ImageUrl = product.ImageUrl,
-                CreatedAt = DateTime.UtcNow
+                SellerId = product.SellerId
             };
         }
     }

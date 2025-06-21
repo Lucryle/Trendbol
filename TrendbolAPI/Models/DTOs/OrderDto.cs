@@ -27,7 +27,6 @@ namespace TrendbolAPI.Models.DTOs
         public int Quantity { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
         public int ProductSellerId { get; set; }
         public string ProductSellerName { get; set; } = string.Empty;
     }
@@ -40,6 +39,5 @@ namespace TrendbolAPI.Models.DTOs
         public int Quantity { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
     }
 } 
