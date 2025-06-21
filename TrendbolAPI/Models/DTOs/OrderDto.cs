@@ -8,7 +8,6 @@ namespace TrendbolAPI.Models.DTOs
         public int ProductId { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Adet 1'den büyük olmalıdır")]
         public int Quantity { get; set; }
     }
 
@@ -43,4 +42,4 @@ namespace TrendbolAPI.Models.DTOs
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
-}
+} 

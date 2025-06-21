@@ -94,14 +94,9 @@ namespace TrendbolAPI.Services.Implementations
 
         public async Task<OrderResponseDto> CreateOrderFromDtoAsync(CreateOrderDto createOrderDto, int userId)
         {
-            // Ürünü kontrol et
             var product = await _productRepository.GetByIdAsync(createOrderDto.ProductId);
             if (product == null)
                 throw new KeyNotFoundException($"Product with ID {createOrderDto.ProductId} not found.");
-
-            // Stok kontrolü
-            if (product.StockQuantity < createOrderDto.Quantity)
-                throw new InvalidOperationException($"Yetersiz stok. Mevcut stok: {product.StockQuantity}, İstenen: {createOrderDto.Quantity}");
 
             var order = new Order
             {
@@ -115,7 +110,6 @@ namespace TrendbolAPI.Services.Implementations
 
             var createdOrder = await _orderRepository.AddAsync(order);
 
-            // Stok güncelle
             product.StockQuantity -= createOrderDto.Quantity;
             await _productRepository.UpdateAsync(product);
 
@@ -151,7 +145,6 @@ namespace TrendbolAPI.Services.Implementations
             if (order == null)
                 return null;
 
-            // Sadece ürünün sahibi sipariş durumunu güncelleyebilir
             if (order.Product?.SellerId != userId)
                 throw new UnauthorizedAccessException("Bu siparişin durumunu güncelleme yetkiniz yok.");
 
@@ -201,4 +194,4 @@ namespace TrendbolAPI.Services.Implementations
             return updatedOrder != null;
         }
     }
-}
+} 

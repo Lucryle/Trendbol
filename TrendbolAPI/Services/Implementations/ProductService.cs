@@ -120,7 +120,6 @@ namespace TrendbolAPI.Services.Implementations
             if (existingProduct == null)
                 throw new KeyNotFoundException($"Product with ID {id} not found.");
 
-            // Sadece ürünün sahibi güncelleyebilir
             if (existingProduct.SellerId != sellerId)
                 throw new UnauthorizedAccessException("Bu ürünü güncelleme yetkiniz yok.");
 
@@ -174,7 +173,6 @@ namespace TrendbolAPI.Services.Implementations
             if (product == null)
                 return false;
 
-            // Sadece ürünün sahibi silebilir
             if (product.SellerId != sellerId)
                 return false;
 
@@ -222,7 +220,6 @@ namespace TrendbolAPI.Services.Implementations
             if (product == null)
                 return false;
 
-            // Sadece ürünün sahibi stok güncelleyebilir
             if (product.SellerId != sellerId)
                 return false;
 
@@ -231,4 +228,4 @@ namespace TrendbolAPI.Services.Implementations
             return true;
         }
     }
-}
+} 

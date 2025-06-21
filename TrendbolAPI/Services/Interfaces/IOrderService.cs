@@ -19,4 +19,4 @@ namespace TrendbolAPI.Services.Interfaces
         Task<bool> CancelOrderAsync(int id);
         Task<bool> ProcessOrderAsync(int id);
     }
-}
+} 

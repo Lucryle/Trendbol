@@ -20,4 +20,4 @@ namespace TrendbolAPI.Services.Interfaces
         Task<bool> UpdateProductStockAsync(int id, int quantity);
         Task<bool> UpdateProductStockAsync(int id, int quantity, int sellerId);
     }
-}
+} 

@@ -86,4 +86,4 @@ namespace TrendbolAPI.Services
             return GetUserIdFromToken(token);
         }
     }
-}
+} 
