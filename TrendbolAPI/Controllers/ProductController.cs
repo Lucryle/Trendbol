@@ -1,115 +1,108 @@
-using Microsoft.AspNetCore.Mvc;
-using TrendbolAPI.Models;
-using TrendbolAPI.Services.Interfaces;
-using System.ComponentModel.DataAnnotations;
-
-namespace TrendbolAPI.Controllers
+using Microsoft.AspNetCore.Authorization;
+// ... existing code ...
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ProductController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductController : ControllerBase
+    private readonly IProductService _productService;
+    private readonly IJwtService _jwtService;
+
+    public ProductController(IProductService productService, IJwtService jwtService)
     {
-        private readonly IProductService _productService;
+        _productService = productService;
+        _jwtService = jwtService;
+    }
+// ... existing code ...
+[HttpPost]
+public async Task<ActionResult<ProductResponseDto>> CreateProduct([FromBody] CreateProductDto createProductDto)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
-        public ProductController(IProductService productService)
-        {
-            _productService = productService;
-        }
+    try
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        int? sellerId = _jwtService.GetUserIdFromAuthorizationHeader(authHeader);
+        if (sellerId == null)
+            return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+        var createdProduct = await _productService.CreateProductFromDtoAsync(createProductDto, sellerId.Value);
+        return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+// ... existing code ...
+[HttpPut("{id}")]
+public async Task<ActionResult<ProductResponseDto>> UpdateProduct(int id, [FromBody] UpdateProductDto updateProductDto)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
-        {
-            var products = await _productService.GetAllProductsAsync();
-            return Ok(products);
-        }
+    try
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        int? sellerId = _jwtService.GetUserIdFromAuthorizationHeader(authHeader);
+        if (sellerId == null)
+            return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+        var updatedProduct = await _productService.UpdateProductFromDtoAsync(id, updateProductDto, sellerId.Value);
+        return Ok(updatedProduct);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Forbid(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+// ... existing code ...
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteProduct(int id)
+{
+    try
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        int? sellerId = _jwtService.GetUserIdFromAuthorizationHeader(authHeader);
+        if (sellerId == null)
+            return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+        var result = await _productService.DeleteProductAsync(id, sellerId.Value);
+        if (!result)
+            return NotFound($"ID'si {id} olan ürün bulunamadı veya silme yetkiniz yok.");
+        return NoContent();
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+// ... existing code ...
+[HttpPut("{id}/stock")]
+public async Task<IActionResult> UpdateStock(int id, [FromBody] int quantity)
+{
+    if (quantity < 0)
+        return BadRequest("Stok miktarı negatif olamaz.");
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProductById(int id)
-        {
-            var product = await _productService.GetProductByIdAsync(id);
-            if (product == null)
-                return NotFound($"ID'si {id} olan ürün bulunamadı.");
-
-            return Ok(product);
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct([FromBody] Product product)
-        {
-            if (string.IsNullOrWhiteSpace(product.Name))
-                return BadRequest("Ürün adı boş olamaz.");
-
-            if (string.IsNullOrWhiteSpace(product.Description))
-                return BadRequest("Ürün açıklaması boş olamaz.");
-
-            if (product.Price <= 0)
-                return BadRequest("Ürün fiyatı 0'dan büyük olmalıdır.");
-
-            if (product.StockQuantity < 0)
-                return BadRequest("Stok miktarı negatif olamaz.");
-
-            product.CreatedAt = DateTime.UtcNow;
-            var createdProduct = await _productService.CreateProductAsync(product);
-            
-            return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Product>> UpdateProduct(int id, [FromBody] Product product)
-        {
-            var existingProduct = await _productService.GetProductByIdAsync(id);
-            if (existingProduct == null)
-                return NotFound($"ID'si {id} olan ürün bulunamadı.");
-
-            if (!string.IsNullOrWhiteSpace(product.Name))
-                existingProduct.Name = product.Name;
-
-            if (!string.IsNullOrWhiteSpace(product.Description))
-                existingProduct.Description = product.Description;
-
-            if (product.Price > 0)
-                existingProduct.Price = product.Price;
-
-            if (product.StockQuantity >= 0)
-                existingProduct.StockQuantity = product.StockQuantity;
-
-            existingProduct.UpdatedAt = DateTime.UtcNow;
-            var updatedProduct = await _productService.UpdateProductAsync(id, existingProduct);
-            
-            return Ok(updatedProduct);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
-        {
-            var result = await _productService.DeleteProductAsync(id);
-            if (!result)
-                return NotFound($"ID'si {id} olan ürün bulunamadı.");
-
-            return NoContent();
-        }
-
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string searchTerm)
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-                return BadRequest("Arama terimi boş olamaz.");
-
-            var products = await _productService.SearchProductsAsync(searchTerm);
-            return Ok(products);
-        }
-
-        [HttpPut("{id}/stock")]
-        public async Task<IActionResult> UpdateStock(int id, [FromBody] int quantity)
-        {
-            if (quantity < 0)
-                return BadRequest("Stok miktarı negatif olamaz.");
-
-            var result = await _productService.UpdateProductStockAsync(id, quantity);
-            if (!result)
-                return NotFound($"ID'si {id} olan ürün bulunamadı.");
-
-            return NoContent();
-        }
+    try
+    {
+        var authHeader = Request.Headers["Authorization"].ToString();
+        int? sellerId = _jwtService.GetUserIdFromAuthorizationHeader(authHeader);
+        if (sellerId == null)
+            return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+        var result = await _productService.UpdateProductStockAsync(id, quantity, sellerId.Value);
+        if (!result)
+            return NotFound($"ID'si {id} olan ürün bulunamadı veya güncelleme yetkiniz yok.");
+        return NoContent();
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
     }
 }
